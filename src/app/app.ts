@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 type CaseStatus = 'OPEN' | 'CLOSED' | 'STAY' | 'ON_HOLD';
 
 interface CaseItem {
+  clientType: string;
   id: number;
   fileNo: string;
   caseNo: string;
@@ -48,6 +49,7 @@ export class AppComponent {
   // -------- Demo data --------
   cases: CaseItem[] = [
     {
+      clientType: 'Individual',
       id: 1,
       fileNo: 'F-1001',
       caseNo: 'CN-01/2026',
@@ -66,6 +68,7 @@ export class AppComponent {
       createdAt: this.todayISO(),
     },
     {
+      clientType: 'Individual',
       id: 2,
       fileNo: 'F-1002',
       caseNo: 'CN-02/2026',
@@ -301,6 +304,7 @@ export class AppComponent {
 
   private emptyCaseModel(): Omit<CaseItem, 'id'> {
     return {
+      clientType: '',
       fileNo: '',
       caseNo: '',
       caseTitle: '',

@@ -137,62 +137,155 @@
         </div>
       </div>
 
+      <!-- Client Type -->
+      <div class="field">
+           <label for="clientType">Client Type</label>
+
+              <input
+                type="text"
+                list="clientTypeList"
+                [(ngModel)]="caseModel.clientType"
+                name="clientType"
+                id="clientType"
+                placeholder="Search or select client type"
+              />
+
+                  <datalist id="clientTypeList">
+                    <option value="Individual"></option>
+                    <option value="Corporate"></option>
+                    <option value="Government"></option>
+                    <option value="NGO"></option>
+                    <option value="Partnership Firm"></option>
+                    <option value="Private Limited Company"></option>
+                    <option value="Public Limited Company"></option>
+                    <option value="Startup"></option>
+                    <option value="Other"></option>
+                  </datalist>
+                </div>
+
+                <!-- File  -->
+
       <div class="formGrid">
         <div class="field">
           <label>File No *</label>
           <input [(ngModel)]="caseModel.fileNo" placeholder="F-1003" />
         </div>
 
+          <!-- Case No -->
         <div class="field">
           <label>Case No</label>
           <input [(ngModel)]="caseModel.caseNo" placeholder="CN-03/2026" />
         </div>
 
+           <!-- Case Title -->
         <div class="field col2">
           <label>Case Title *</label>
           <input [(ngModel)]="caseModel.caseTitle" placeholder="e.g., A vs B" />
         </div>
 
+           <!-- Party Represent -->
         <div class="field">
           <label>Party Represent</label>
           <input [(ngModel)]="caseModel.partyRepresent" placeholder="Plaintiff/Defendant" />
         </div>
 
-        <div class="field">
+           <!-- Case Type-->
+        <!-- <div class="field">
           <label>Case Type</label>
           <input [(ngModel)]="caseModel.caseType" placeholder="Civil/Criminal/Corporate" />
-        </div>
-
+        </div> -->
         <div class="field">
+                <label for="caseType">Case Type</label>
+
+                <input
+                  type="text"
+                  list="caseTypeList"
+                  [(ngModel)]="caseModel.caseType"
+                  name="caseType"
+                  placeholder="Search or select case type"
+                />
+
+                <datalist id="caseTypeList">
+                  <option value="Civil"></option>
+                  <option value="Criminal"></option>
+                  <option value="Corporate"></option>
+                  <option value="Family"></option>
+                  <option value="Property"></option>
+                  <option value="Labour"></option>
+                  <option value="Consumer"></option>
+                  <option value="Tax"></option>
+                  <option value="Service"></option>
+                  <option value="Arbitration"></option>
+                  <option value="Cheque Bounce"></option>
+                  <option value="Motor Accident"></option>
+                  <option value="Banking"></option>
+                  <option value="Cyber Crime"></option>
+                  <option value="Other"></option>
+                </datalist>
+
+              </div>
+               <!-- Court name -->
+        <!-- <div class="field">
           <label>Court Name</label>
           <input [(ngModel)]="caseModel.courtName" />
-        </div>
+        </div> -->
+                  <div class="field">
+            <label for="courtName">Court Name</label>
 
+            <input
+              type="text"
+              list="courtList"
+              [(ngModel)]="caseModel.courtName"
+              name="courtName"
+              id="courtName"
+              placeholder="Search or select court name"
+            />
+
+            <datalist id="courtList">
+              <option value="Supreme Court of India"></option>
+              <option value="High Court"></option>
+              <option value="District Court"></option>
+              <option value="Sessions Court"></option>
+              <option value="Civil Court"></option>
+              <option value="Family Court"></option>
+              <option value="Consumer Court"></option>
+              <option value="Labour Court"></option>
+              <option value="Commercial Court"></option>
+              <option value="Motor Accident Claims Tribunal (MACT)"></option>
+              <option value="NCLT (National Company Law Tribunal)"></option>
+              <option value="NCLAT"></option>
+              <option value="Debt Recovery Tribunal (DRT)"></option>
+              <option value="Revenue Court"></option>
+              <option value="Other"></option>
+            </datalist>
+          </div>
+
+         <!-- City -->
         <div class="field">
           <label>City</label>
           <input [(ngModel)]="caseModel.city" />
         </div>
-
+         <!-- Handled By (Name) -->
         <div class="field">
           <label>Handled By (Name)</label>
           <input [(ngModel)]="caseModel.handledByName" />
         </div>
-
+         <!-- Handled By (Phone) -->
         <div class="field">
           <label>Handled By (Phone)</label>
           <input [(ngModel)]="caseModel.handledByPhone" />
         </div>
-
+         <!-- Handled By (Address) -->
         <div class="field col2">
           <label>Handled By (Address)</label>
           <input [(ngModel)]="caseModel.handledByAddress" />
         </div>
-
+         <!-- Email -->
         <div class="field col2">
           <label>Email (optional)</label>
           <input [(ngModel)]="caseModel.handledByEmail" />
         </div>
-
+         <!-- Status -->
         <div class="field">
           <label>Status</label>
           <select [(ngModel)]="caseModel.status">
@@ -202,12 +295,12 @@
             <option value="ON_HOLD">ON_HOLD</option>
           </select>
         </div>
-
+         <!-- Next Hearing Date -->
         <div class="field">
           <label>Next Hearing Date</label>
           <input type="date" [(ngModel)]="caseModel.nextHearingDate" />
         </div>
-
+         <!-- Fixed For -->
         <div class="field col2">
           <label>Fixed For</label>
           <input [(ngModel)]="caseModel.fixedFor" placeholder="Evidence/Arguments/Order" />
