@@ -1,5 +1,7 @@
 <div class="app">
-  <!-- Topbar -->
+  <!-- =========================================================
+       TOPBAR / HEADER SECTION
+       ========================================================= -->
   <div class="topbar">
     <div class="brand">
       <div class="logo">⚖️</div>
@@ -9,6 +11,7 @@
       </div>
     </div>
 
+    <!-- TOP NAVIGATION TABS -->
     <div class="tabs">
       <button (click)="setTab('dashboard')" [class.active]="activeTab==='dashboard'">Dashboard</button>
       <button (click)="setTab('new')" [class.active]="activeTab==='new'">New Case</button>
@@ -18,51 +21,119 @@
   </div>
 
   <!-- DASHBOARD -->
-  <div *ngIf="activeTab==='dashboard'" class="page">
-    <div class="grid">
-      <!-- Left: Filters + List -->
-      <div class="card">
-        <div class="cardHeader">
-          <div>
-            <div class="cardTitle">View Cases</div>
-            <div class="cardSub">Search + Filters + Case List</div>
-          </div>
-          <button class="primary" (click)="setTab('new')">+ New Case</button>
-        </div>
+<div *ngIf="activeTab==='dashboard'" class="page">
+  <div class="dashboardLayout" [ngClass]="{'filterClosed': !showFilterPanel}">
 
-        <div class="row">
-          <div class="field">
-            <label>Search (Case Title)</label>
-            <input [(ngModel)]="searchText" placeholder="Min 3 characters..." />
-            <div class="hint" *ngIf="searchText.trim().length > 0 && !isSearchActive">
-              Type at least <b>3</b> characters to search.
+    <!-- LEFT FILTER SIDEBAR -->
+    <div class="filterSidebar card" [ngClass]="{'collapsed': !showFilterPanel}">
+      <div class="filterSidebarHeader" (click)="toggleFilterPanel()" style="cursor: pointer;">
+        <div *ngIf="showFilterPanel" class="cardTitle">Case Filters</div>
+        <button type="button" class="collapseBtn" (click)="toggleFilterPanel(); $event.stopPropagation()">
+          {{ showFilterPanel ? '‹' : '☰' }}
+        </button>
+      </div>
+
+      <div *ngIf="showFilterPanel" class="filterSidebarBody">
+        <!-- FILE / CASE -->
+        <div class="filterGroup">
+          <div class="filterGroupTitle">Basic Info</div>
+
+          <div class="filterTwoCol">
+            <div class="field">
+              <label>File No</label>
+              <input [(ngModel)]="filterForm.fileNo" placeholder="Enter file no" />
+            </div>
+
+            <div class="field">
+              <label>Case No</label>
+              <input [(ngModel)]="filterForm.caseNo" placeholder="Enter case no" />
             </div>
           </div>
 
           <div class="field">
-            <label>Status</label>
-            <select [(ngModel)]="statusFilter">
-              <option value="ALL">ALL</option>
-              <option value="OPEN">OPEN</option>
-              <option value="CLOSED">CLOSED</option>
-              <option value="STAY">STAY</option>
-              <option value="ON_HOLD">ON_HOLD</option>
-            </select>
+            <label>Case Title</label>
+            <input [(ngModel)]="filterForm.caseTitle" placeholder="Case Title" />
+          </div>
+        </div>
+
+        <!-- LOCATION -->
+        <div class="filterGroup">
+          <div class="filterGroupTitle">Location</div>
+
+          <div class="filterTwoCol">
+            <div class="field">
+              <label>Court Name</label>
+              <select [(ngModel)]="filterForm.courtName">
+                <option value="">All Courts</option>
+                <option *ngFor="let court of courtOptions" [value]="court">{{ court }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>City</label>
+              <select [(ngModel)]="filterForm.city">
+                <option value="">All Cities</option>
+                <option *ngFor="let city of cityOptions" [value]="city">{{ city }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADVOCATE / STATUS -->
+        <div class="filterGroup">
+          <div class="filterGroupTitle">Advocate & Status</div>
+
+          <div class="filterTwoCol">
+            <div class="field">
+              <label>Handled By Advocate</label>
+              <select [(ngModel)]="filterForm.handledByName">
+                <option value="">All Advocates</option>
+                <option *ngFor="let advocate of advocateOptions" [value]="advocate">
+                  {{ advocate }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Status</label>
+              <select [(ngModel)]="filterForm.status">
+                <option value="ALL">ALL</option>
+                <option value="OPEN">OPEN</option>
+                <option value="CLOSED">CLOSED</option>
+                <option value="STAY">STAY</option>
+                <option value="ON_HOLD">ON_HOLD</option>
+              </select>
+            </div>
           </div>
 
-          <div class="field checkboxField">
-            <label>Upcoming only</label>
-            <label class="checkbox">
-              <input type="checkbox" [(ngModel)]="upcomingOnly" />
-              <span>Show upcoming</span>
-            </label>
+          <label class="checkbox sidebarCheckbox">
+            <input type="checkbox" [(ngModel)]="filterForm.upcomingOnly" />
+            <span>Upcoming Cases</span>
+          </label>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="sidebarActions">
+          <button type="button" class="secondaryBtn" (click)="resetAppliedFilters()">Reset Filters</button>
+          <button type="button" class="primary" (click)="applyFilters()">Apply Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="mainContent">
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <div class="cardTitle">Case Management</div>
+            <div class="cardSub">Filtered case list</div>
           </div>
+          <button type="button" class="primary" (click)="setTab('new')">+ New Case</button>
         </div>
 
         <div class="list">
           <div class="listHeader">
             <div>Case List ({{ filteredCases.length }})</div>
-            <div class="muted" *ngIf="isSearchActive">Searching: “{{ searchText.trim() }}”</div>
           </div>
 
           <div *ngIf="filteredCases.length === 0" class="empty">
@@ -74,37 +145,38 @@
               <div class="caseTitle">{{ c.caseTitle }}</div>
               <div class="caseMeta">
                 <span class="pill">{{ c.status }}</span>
-                <span class="dot">•</span>
+                <span>Client: {{ c.clientType }}</span>
                 <span>File: {{ c.fileNo }}</span>
-                <span class="dot">•</span>
-                <span>Next: {{ c.nextHearingDate || '—' }}</span>
-                <span class="dot">•</span>
+                <span>Case No: {{ c.caseNo }}</span>
                 <span>{{ c.courtName }}, {{ c.city }}</span>
+                <span>Handled By: {{ c.handledByName }}</span>
               </div>
             </div>
 
             <div class="caseActions">
-              <button (click)="editCase(c)">Edit</button>
-              <button class="danger" (click)="deleteCase(c.id)">Delete</button>
+              <button type="button" class="editBtn" (click)="editCase(c)">Edit</button>
+              <button type="button" class="primaryBtn" (click)="addExpenses(c.id)">Add Expenses</button>
+              <button type="button" class="primaryBtn" (click)="addAdvocateFees(c.id)">Add Fees of Advocate</button>
+              <button type="button" class="danger" (click)="deleteCase(c.id)">Delete</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Right: Date-wise count -->
+    <!-- RIGHT -->
+    <div class="rightPanel">
       <div class="card">
         <div class="cardHeader">
           <div>
             <div class="cardTitle">Cases by Date</div>
-            <div class="cardSub">Show number of cases only for selected date</div>
+            <div class="cardSub">Show number of cases for selected date</div>
           </div>
         </div>
 
-        <div class="row">
-          <div class="field">
-            <label>Select Date</label>
-            <input type="date" [(ngModel)]="selectedDate" />
-          </div>
+        <div class="field">
+          <label>Select Date</label>
+          <input type="date" [(ngModel)]="selectedDate" />
         </div>
 
         <div class="bigCount">
@@ -114,17 +186,25 @@
 
         <div class="miniList">
           <div class="miniTitle">Cases on selected date</div>
-          <div *ngIf="casesOnSelectedDate.length === 0" class="empty">No cases on this date.</div>
+
+          <div *ngIf="casesOnSelectedDate.length === 0" class="empty">
+            No cases found for this date.
+          </div>
+
           <div *ngFor="let c of casesOnSelectedDate" class="miniItem">
             <div class="miniCaseTitle">{{ c.caseTitle }}</div>
-            <div class="muted">{{ c.fileNo }} • {{ c.status }} • Fixed For: {{ c.fixedFor || '—' }}</div>
+            <div class="muted">{{ c.fileNo }} • {{ c.status }} • {{ c.courtName }}, {{ c.city }}</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- NEW CASE -->
+  </div>
+</div>
+
+  <!-- =========================================================
+       NEW CASE REGISTRATION SECTION
+       ========================================================= -->
   <div *ngIf="activeTab==='new'" class="page">
     <div class="card">
       <div class="cardHeader">
@@ -132,189 +212,228 @@
           <div class="cardTitle">{{ editingId ? 'Edit Case' : 'New Case Registration' }}</div>
           <div class="cardSub">Form model using [(ngModel)]</div>
         </div>
+
         <div class="actions">
           <button (click)="setTab('dashboard')">Back</button>
         </div>
       </div>
 
-      <!-- Client Type -->
-      <div class="field">
-           <label for="clientType">Client Type</label>
+      <!-- =====================================================
+           CLIENT TYPE SECTION (API BASED SEARCHABLE DROPDOWN)
+           ===================================================== -->
+      <div class="field searchable-dropdown">
+        <label for="clientType">Client Type</label>
 
-              <input
-                type="text"
-                list="clientTypeList"
-                [(ngModel)]="caseModel.clientType"
-                name="clientType"
-                id="clientType"
-                placeholder="Search or select client type"
-              />
+        <input
+          type="text"
+          id="clientType"
+          name="clientType"
+          [(ngModel)]="caseModel.clientType"
+          (input)="filterClientTypes()"
+          (focus)="filterClientTypes()"
+          (blur)="hideClientTypeDropdown()"
+          placeholder="Search or select client type"
+          autocomplete="off"
+        />
 
-                  <datalist id="clientTypeList">
-                    <option value="Individual"></option>
-                    <option value="Corporate"></option>
-                    <option value="Government"></option>
-                    <option value="NGO"></option>
-                    <option value="Partnership Firm"></option>
-                    <option value="Private Limited Company"></option>
-                    <option value="Public Limited Company"></option>
-                    <option value="Startup"></option>
-                    <option value="Other"></option>
-                  </datalist>
-                </div>
-
-                <!-- File  -->
-
-      <div class="formGrid">
-        <div class="field">
-          <label>File No *</label>
-          <input [(ngModel)]="caseModel.fileNo" placeholder="F-1003" />
-        </div>
-
-          <!-- Case No -->
-        <div class="field">
-          <label>Case No</label>
-          <input [(ngModel)]="caseModel.caseNo" placeholder="CN-03/2026" />
-        </div>
-
-           <!-- Case Title -->
-        <div class="field col2">
-          <label>Case Title *</label>
-          <input [(ngModel)]="caseModel.caseTitle" placeholder="e.g., A vs B" />
-        </div>
-
-           <!-- Party Represent -->
-        <div class="field">
-          <label>Party Represent</label>
-          <input [(ngModel)]="caseModel.partyRepresent" placeholder="Plaintiff/Defendant" />
-        </div>
-
-           <!-- Case Type-->
-        <!-- <div class="field">
-          <label>Case Type</label>
-          <input [(ngModel)]="caseModel.caseType" placeholder="Civil/Criminal/Corporate" />
-        </div> -->
-        <div class="field">
-                <label for="caseType">Case Type</label>
-
-                <input
-                  type="text"
-                  list="caseTypeList"
-                  [(ngModel)]="caseModel.caseType"
-                  name="caseType"
-                  placeholder="Search or select case type"
-                />
-
-                <datalist id="caseTypeList">
-                  <option value="Civil"></option>
-                  <option value="Criminal"></option>
-                  <option value="Corporate"></option>
-                  <option value="Family"></option>
-                  <option value="Property"></option>
-                  <option value="Labour"></option>
-                  <option value="Consumer"></option>
-                  <option value="Tax"></option>
-                  <option value="Service"></option>
-                  <option value="Arbitration"></option>
-                  <option value="Cheque Bounce"></option>
-                  <option value="Motor Accident"></option>
-                  <option value="Banking"></option>
-                  <option value="Cyber Crime"></option>
-                  <option value="Other"></option>
-                </datalist>
-
-              </div>
-               <!-- Court name -->
-        <!-- <div class="field">
-          <label>Court Name</label>
-          <input [(ngModel)]="caseModel.courtName" />
-        </div> -->
-                  <div class="field">
-            <label for="courtName">Court Name</label>
-
-            <input
-              type="text"
-              list="courtList"
-              [(ngModel)]="caseModel.courtName"
-              name="courtName"
-              id="courtName"
-              placeholder="Search or select court name"
-            />
-
-            <datalist id="courtList">
-              <option value="Supreme Court of India"></option>
-              <option value="High Court"></option>
-              <option value="District Court"></option>
-              <option value="Sessions Court"></option>
-              <option value="Civil Court"></option>
-              <option value="Family Court"></option>
-              <option value="Consumer Court"></option>
-              <option value="Labour Court"></option>
-              <option value="Commercial Court"></option>
-              <option value="Motor Accident Claims Tribunal (MACT)"></option>
-              <option value="NCLT (National Company Law Tribunal)"></option>
-              <option value="NCLAT"></option>
-              <option value="Debt Recovery Tribunal (DRT)"></option>
-              <option value="Revenue Court"></option>
-              <option value="Other"></option>
-            </datalist>
+        <div class="dropdown-list" *ngIf="showClientTypeDropdown">
+          <div
+            class="dropdown-item"
+            *ngFor="let item of filteredClientTypes"
+            (click)="selectClientType(item)"
+          >
+            {{ item.typeName }}
           </div>
 
-         <!-- City -->
+          <div class="dropdown-item no-data" *ngIf="filteredClientTypes.length === 0">
+            No client type found
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           NEW CASE FORM GRID SECTION
+           ===================================================== -->
+      <div class="formGrid">
+        <!-- FILE NO -->
+        <div class="field">
+          <label>File No *</label>
+          <input name="fileNo" [(ngModel)]="caseModel.fileNo" placeholder="F-1003" />
+        </div>
+
+        <!-- CASE NO -->
+        <div class="field">
+          <label>Case No</label>
+          <input name="caseNo" [(ngModel)]="caseModel.caseNo" placeholder="CN-03/2026" />
+        </div>
+
+        <!-- CASE TITLE -->
+        <div class="field col2">
+          <label>Case Title *</label>
+          <input name="caseTitle" [(ngModel)]="caseModel.caseTitle" placeholder="e.g., A vs B" />
+        </div>
+
+        <!-- PARTY REPRESENT -->
+        <div class="field">
+          <label>Party Represent</label>
+          <input name="partyRepresent" [(ngModel)]="caseModel.partyRepresent" placeholder="Plaintiff/Defendant" />
+        </div>
+
+        <!-- CASE TYPE -->
+        <!-- <div class="field">
+          <label for="caseType">Case Type</label>
+          <input
+            type="text"
+            list="caseTypeList"
+            [(ngModel)]="caseModel.caseType"
+            name="caseType"
+            placeholder="Search or select case type"
+          />
+          <datalist id="caseTypeList">
+            <option value="Civil"></option>
+            <option value="Criminal"></option>
+            <option value="Corporate"></option>
+            <option value="Family"></option>
+            <option value="Property"></option>
+            <option value="Labour"></option>
+            <option value="Consumer"></option>
+            <option value="Tax"></option>
+            <option value="Service"></option>
+            <option value="Arbitration"></option>
+            <option value="Cheque Bounce"></option>
+            <option value="Motor Accident"></option>
+            <option value="Banking"></option>
+            <option value="Cyber Crime"></option>
+            <option value="Other"></option>
+          </datalist>
+        </div> -->
+       <div class="field searchable-dropdown">
+  <label for="caseType">Case Type</label>
+
+  <input
+    type="text"
+    id="caseType"
+    name="caseType"
+    [(ngModel)]="caseModel.caseType"
+    (input)="filterCaseTypes()"
+    (focus)="filterCaseTypes()"
+    (blur)="hideCaseTypeDropdown()"
+    placeholder="Search or select case type"
+    autocomplete="off"
+  />
+
+  <div class="dropdown-list" *ngIf="showCaseTypeDropdown">
+    <div
+      class="dropdown-item"
+      *ngFor="let item of filteredCaseTypes"
+      (mousedown)="selectCaseType(item)"
+    >
+      {{ item.name }}
+    </div>
+
+    <div class="dropdown-item no-data" *ngIf="filteredCaseTypes.length === 0">
+      No case type found
+    </div>
+  </div>
+</div>
+
+        <!-- COURT NAME -->
+        <div class="field">
+          <label for="courtName">Court Name</label>
+          <input
+            type="text"
+            list="courtList"
+            [(ngModel)]="caseModel.courtName"
+            name="courtName"
+            id="courtName"
+            placeholder="Search or select court name"
+          />
+          <datalist id="courtList">
+            <option value="Supreme Court of India"></option>
+            <option value="High Court"></option>
+            <option value="District Court"></option>
+            <option value="Sessions Court"></option>
+            <option value="Civil Court"></option>
+            <option value="Family Court"></option>
+            <option value="Consumer Court"></option>
+            <option value="Labour Court"></option>
+            <option value="Commercial Court"></option>
+            <option value="Motor Accident Claims Tribunal (MACT)"></option>
+            <option value="NCLT (National Company Law Tribunal)"></option>
+            <option value="NCLAT"></option>
+            <option value="Debt Recovery Tribunal (DRT)"></option>
+            <option value="Revenue Court"></option>
+            <option value="Other"></option>
+          </datalist>
+        </div>
+
+        <!-- CITY -->
         <div class="field">
           <label>City</label>
-          <input [(ngModel)]="caseModel.city" />
+          <input name="city" [(ngModel)]="caseModel.city" />
         </div>
-         <!-- Handled By (Name) -->
+
+        <!-- HANDLED BY NAME -->
         <div class="field">
           <label>Handled By (Name)</label>
-          <input [(ngModel)]="caseModel.handledByName" />
+          <input name="handledByName" [(ngModel)]="caseModel.handledByName" />
         </div>
-         <!-- Handled By (Phone) -->
+
+        <!-- HANDLED BY PHONE -->
         <div class="field">
           <label>Handled By (Phone)</label>
-          <input [(ngModel)]="caseModel.handledByPhone" />
+          <input name="handledByPhone" [(ngModel)]="caseModel.handledByPhone" />
         </div>
-         <!-- Handled By (Address) -->
+
+        <!-- HANDLED BY ADDRESS -->
         <div class="field col2">
           <label>Handled By (Address)</label>
-          <input [(ngModel)]="caseModel.handledByAddress" />
+          <input name="handledByAddress" [(ngModel)]="caseModel.handledByAddress" />
         </div>
-         <!-- Email -->
+
+        <!-- EMAIL -->
         <div class="field col2">
           <label>Email (optional)</label>
-          <input [(ngModel)]="caseModel.handledByEmail" />
+          <input name="handledByEmail" [(ngModel)]="caseModel.handledByEmail" />
         </div>
-         <!-- Status -->
+
+        <!-- STATUS -->
         <div class="field">
           <label>Status</label>
-          <select [(ngModel)]="caseModel.status">
+          <select name="status" [(ngModel)]="caseModel.status">
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
             <option value="STAY">STAY</option>
             <option value="ON_HOLD">ON_HOLD</option>
           </select>
         </div>
-         <!-- Next Hearing Date -->
+
+        <!-- NEXT HEARING DATE -->
         <div class="field">
           <label>Next Hearing Date</label>
-          <input type="date" [(ngModel)]="caseModel.nextHearingDate" />
+          <input type="date" name="nextHearingDate" [(ngModel)]="caseModel.nextHearingDate" />
         </div>
-         <!-- Fixed For -->
+
+        <!-- FIXED FOR -->
         <div class="field col2">
           <label>Fixed For</label>
-          <input [(ngModel)]="caseModel.fixedFor" placeholder="Evidence/Arguments/Order" />
+          <input name="fixedFor" [(ngModel)]="caseModel.fixedFor" placeholder="Evidence/Arguments/Order" />
         </div>
       </div>
 
+      <!-- FORM ACTION BUTTONS -->
       <div class="footerActions">
-        <button class="primary" (click)="saveCase()">{{ editingId ? 'Update Case' : 'Save Case' }}</button>
+        <button class="primary" (click)="saveCase()">
+          {{ editingId ? 'Update Case' : 'Save Case' }}
+        </button>
         <button *ngIf="editingId" (click)="cancelEdit()">Cancel Edit</button>
       </div>
     </div>
   </div>
 
-  <!-- CALENDAR -->
+  <!-- =========================================================
+       EVENT CALENDAR SECTION
+       ========================================================= -->
   <div *ngIf="activeTab==='calendar'" class="page">
     <div class="card">
       <div class="cardHeader">
@@ -322,6 +441,7 @@
           <div class="cardTitle">Event Calendar</div>
           <div class="cardSub">Click a date to see case count</div>
         </div>
+
         <div class="actions">
           <button (click)="prevMonth()">◀</button>
           <div class="monthTitle">{{ calendarTitle }}</div>
@@ -329,10 +449,12 @@
         </div>
       </div>
 
+      <!-- WEEK DAYS -->
       <div class="weekday">
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
 
+      <!-- CALENDAR GRID -->
       <div class="calendarGrid">
         <button
           *ngFor="let d of calendarDays"
@@ -345,15 +467,18 @@
             <span class="dayNum">{{ d.dayNum }}</span>
             <span class="badge" *ngIf="d.count > 0">{{ d.count }}</span>
           </div>
-          <div class="dayHint" *ngIf="d.dateISO === selectedDate">
-            Selected
-          </div>
+          <div class="dayHint" *ngIf="d.dateISO === selectedDate">Selected</div>
         </button>
       </div>
 
+      <!-- SELECTED DATE CASES -->
       <div class="miniList">
         <div class="miniTitle">Cases on {{ selectedDate }} ({{ casesOnSelectedDateCount }})</div>
-        <div *ngIf="casesOnSelectedDate.length === 0" class="empty">No cases on this date.</div>
+
+        <div *ngIf="casesOnSelectedDate.length === 0" class="empty">
+          No cases on this date.
+        </div>
+
         <div *ngFor="let c of casesOnSelectedDate" class="miniItem">
           <div class="miniCaseTitle">{{ c.caseTitle }}</div>
           <div class="muted">{{ c.fileNo }} • {{ c.status }} • {{ c.courtName }}, {{ c.city }}</div>
@@ -362,9 +487,12 @@
     </div>
   </div>
 
-  <!-- FINANCE -->
+  <!-- =========================================================
+       FINANCE SECTION
+       ========================================================= -->
   <div *ngIf="activeTab==='finance'" class="page">
     <div class="grid">
+      <!-- FINANCE SUMMARY CARD -->
       <div class="card">
         <div class="cardHeader">
           <div>
@@ -373,6 +501,7 @@
           </div>
         </div>
 
+        <!-- FINANCE STATS -->
         <div class="stats">
           <div class="stat">
             <div class="statLabel">Total Income</div>
@@ -388,6 +517,7 @@
           </div>
         </div>
 
+        <!-- FINANCE FORM -->
         <div class="row">
           <div class="field">
             <label>Date</label>
@@ -423,6 +553,7 @@
         </div>
       </div>
 
+      <!-- FINANCE ENTRY LIST -->
       <div class="card">
         <div class="cardHeader">
           <div>
@@ -440,6 +571,7 @@
               <div class="muted">{{ e.date }} • {{ e.type }}</div>
               <div class="muted" *ngIf="e.note">{{ e.note }}</div>
             </div>
+
             <div class="financeRight">
               <div class="amount">₹ {{ e.amount }}</div>
               <button class="danger" (click)="deleteFinanceEntry(e.id)">Delete</button>
@@ -450,91 +582,989 @@
     </div>
   </div>
 
-  <!-- Minimal styles in same file (works, but better in app.css) -->
+  <!-- =========================================================
+       STYLES SECTION
+       You can move this to app.css later
+       ========================================================= -->
   <style>
-    .app { font-family: Arial, sans-serif; background:#f6f7fb; min-height:100vh; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:#111827; color:#fff; }
-    .brand { display:flex; gap:12px; align-items:center; }
-    .logo { width:42px; height:42px; display:grid; place-items:center; background:#1f2937; border-radius:12px; font-size:18px; }
-    .title { font-weight:700; }
-    .subtitle { font-size:12px; opacity:.75; margin-top:2px; }
-    .tabs { display:flex; gap:8px; flex-wrap:wrap; }
-    .tabs button { background:#1f2937; color:#fff; border:1px solid #374151; padding:8px 12px; border-radius:10px; cursor:pointer; }
-    .tabs button.active { background:#2563eb; border-color:#2563eb; }
+    /* =======================================================
+       GLOBAL APP STYLES
+       ======================================================= */
+    .app {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      min-height: 100vh;
+    }
 
-    .page { padding:18px; }
-    .grid { display:grid; grid-template-columns: 1.4fr .9fr; gap:14px; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .page {
+      padding: 18px;
+    }
 
-    .card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.04); }
-    .cardHeader { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-    .cardTitle { font-size:16px; font-weight:700; color:#111827; }
-    .cardSub { font-size:12px; color:#6b7280; margin-top:3px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 14px;
+    }
 
-    .row { display:grid; grid-template-columns: 1.2fr .8fr .6fr; gap:10px; }
-    @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
 
-    .field label { display:block; font-size:12px; color:#374151; margin-bottom:6px; }
-    .field input, .field select { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px; outline:none; }
-    .field input:focus, .field select:focus { border-color:#2563eb; }
-    .hint { font-size:12px; color:#9a3412; margin-top:6px; }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.04);
+    }
 
-    .checkboxField { display:flex; align-items:flex-end; }
-    .checkbox { display:flex; align-items:center; gap:8px; padding:10px 0; }
+    .cardHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
-    .primary { background:#2563eb; color:#fff; border:none; padding:10px 12px; border-radius:12px; cursor:pointer; }
-    button { border:1px solid #e5e7eb; background:#fff; padding:9px 12px; border-radius:12px; cursor:pointer; }
-    .danger { border-color:#fecaca; background:#fff; color:#b91c1c; }
+    .cardTitle {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
 
-    .list { margin-top:10px; }
-    .listHeader { display:flex; justify-content:space-between; color:#374151; font-weight:700; margin-bottom:10px; }
-    .caseItem { display:flex; justify-content:space-between; gap:10px; padding:12px; border:1px solid #f1f5f9; border-radius:14px; margin-bottom:10px; }
-    .caseTitle { font-weight:700; color:#111827; }
-    .caseMeta { font-size:12px; color:#6b7280; margin-top:6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .pill { background:#eef2ff; color:#3730a3; padding:2px 8px; border-radius:999px; font-weight:700; font-size:11px; }
-    .dot { opacity:.6; }
-    .caseActions { display:flex; gap:8px; align-items:center; }
+    .cardSub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
 
-    .empty { padding:14px; border:1px dashed #e5e7eb; border-radius:14px; color:#6b7280; }
+    /* =======================================================
+       TOPBAR STYLES
+       ======================================================= */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #111827;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
 
-    .bigCount { margin-top:6px; padding:14px; border-radius:16px; background:#f3f4f6; text-align:center; }
-    .count { font-size:44px; font-weight:800; color:#111827; }
-    .countLabel { margin-top:6px; color:#6b7280; }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
 
-    .miniList { margin-top:12px; }
-    .miniTitle { font-weight:700; color:#111827; margin-bottom:10px; }
-    .miniItem { padding:10px; border:1px solid #f1f5f9; border-radius:14px; margin-bottom:10px; }
-    .miniCaseTitle { font-weight:700; color:#111827; }
-    .muted { color:#6b7280; font-size:12px; margin-top:4px; }
+    .logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      background: #1f2937;
+      border-radius: 12px;
+      font-size: 18px;
+    }
 
-    .formGrid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width: 900px) { .formGrid { grid-template-columns: 1fr; } }
-    .col2 { grid-column: span 2; }
-    @media (max-width: 900px) { .col2 { grid-column: span 1; } }
-    .footerActions { display:flex; gap:10px; margin-top:12px; }
+    .title {
+      font-weight: 700;
+    }
 
-    .actions { display:flex; gap:8px; align-items:center; }
-    .monthTitle { font-weight:700; color:#111827; padding:0 8px; }
+    .subtitle {
+      font-size: 12px;
+      opacity: .75;
+      margin-top: 2px;
+    }
 
-    .weekday { display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-bottom:8px; color:#6b7280; font-size:12px; }
-    .calendarGrid { display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; }
-    .day { text-align:left; min-height:70px; border-radius:14px; border:1px solid #e5e7eb; padding:10px; }
-    .day.outside { opacity:.5; background:#fafafa; }
-    .day.selected { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.15); }
-    .dayTop { display:flex; justify-content:space-between; align-items:center; }
-    .dayNum { font-weight:800; color:#111827; }
-    .badge { background:#2563eb; color:#fff; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
-    .dayHint { margin-top:8px; font-size:11px; color:#2563eb; font-weight:700; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-    .stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:10px; }
-    @media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
-    .stat { border:1px solid #e5e7eb; border-radius:16px; padding:12px; background:#fafafa; }
-    .statLabel { color:#6b7280; font-size:12px; }
-    .statValue { margin-top:6px; font-size:20px; font-weight:800; color:#111827; }
+    .tabs button {
+      background: #1f2937;
+      color: #fff;
+      border: 1px solid #374151;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
 
-    .financeItem { display:flex; justify-content:space-between; gap:10px; padding:12px; border:1px solid #f1f5f9; border-radius:14px; margin-bottom:10px; }
-    .financeTitle { font-weight:700; color:#111827; }
-    .financeRight { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-    .amount { font-weight:800; color:#111827; }
+    .tabs button.active {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    /* =======================================================
+       FORM FIELD STYLES
+       ======================================================= */
+    .row {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .6fr;
+      gap: 10px;
+    }
+
+    .singleRow {
+      grid-template-columns: 1fr;
+    }
+
+    @media (max-width: 900px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .formGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .formGrid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .col2 {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 900px) {
+      .col2 {
+        grid-column: span 1;
+      }
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #9a3412;
+      margin-top: 6px;
+    }
+
+    .checkboxField {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+    }
+
+    /* =======================================================
+       BUTTON STYLES
+       ======================================================= */
+    .primary {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .primary:hover {
+      background: #1d4ed8;
+    }
+
+    .primaryBtn {
+      background: #059669;
+      color: #fff;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .primaryBtn:hover {
+      background: #047857;
+    }
+
+    .editBtn {
+      background: #92400e;
+      color: #fff;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .editBtn:hover {
+      background: #78350f;
+    }
+
+    .secondaryBtn {
+      background: #fff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .secondaryBtn:hover {
+      background: #f9fafb;
+    }
+
+    button {
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .danger {
+      border-color: #fecaca;
+      background: #fff;
+      color: #b91c1c;
+    }
+
+    .danger:hover {
+      background: #fef2f2;
+    }
+
+    .footerActions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* =======================================================
+       FILTER PANEL STYLES
+       ======================================================= */
+    .filterPanel {
+      margin-bottom: 18px;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .filterPanelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filterPanelActions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .dashboardFilters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboardFilters {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .dashboardFilters {
+        grid-template-columns: 1fr;
+      }
+
+      .filterPanelHeader {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filterPanelActions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    /* =======================================================
+       CASE LIST STYLES
+       ======================================================= */
+    .list {
+      margin-top: 10px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .listHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #374151;
+      font-weight: 700;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .caseItem {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      margin-bottom: 0;
+      background: #fff;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .caseItem:last-child {
+      border-bottom: 1px solid #eef2f7;
+      margin-bottom: 0;
+    }
+
+    .caseItem:not(:last-child) {
+      margin-bottom: 0;
+      border-bottom: 2px solid #d1d5db;
+    }
+
+    .caseItem:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+    }
+
+    .caseMain {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .caseTitle {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .caseMeta {
+      font-size: 12px;
+      color: #6b7280;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .dot {
+      opacity: .5;
+    }
+
+    .caseActions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      padding: 14px;
+      border: 1px dashed #e5e7eb;
+      border-radius: 14px;
+      color: #6b7280;
+      background: #fff;
+    }
+
+    /* =======================================================
+       DATE COUNT / MINI LIST STYLES
+       ======================================================= */
+    .bigCount {
+      margin-top: 6px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f3f4f6;
+      text-align: center;
+    }
+
+    .count {
+      font-size: 44px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .countLabel {
+      margin-top: 6px;
+      color: #6b7280;
+    }
+
+    .miniList {
+      margin-top: 12px;
+    }
+
+    .miniTitle {
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+
+    .miniItem {
+      padding: 10px;
+      border: 1px solid #f1f5f9;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .miniCaseTitle {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    /* =======================================================
+       SEARCHABLE CLIENT TYPE DROPDOWN STYLES
+       ======================================================= */
+    .searchable-dropdown {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      margin-top: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+      box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    }
+
+    .dropdown-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .dropdown-item:hover {
+      background: #f3f4f6;
+    }
+
+    .no-data {
+      color: #6b7280;
+      cursor: default;
+    }
+
+    .dropdown-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .dropdown-list::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 10px;
+    }
+
+    .dropdown-list::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* =======================================================
+       CALENDAR STYLES
+       ======================================================= */
+    .monthTitle {
+      font-weight: 700;
+      color: #111827;
+      padding: 0 8px;
+    }
+
+    .weekday {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .calendarGrid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .day {
+      text-align: left;
+      min-height: 70px;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .day.outside {
+      opacity: .5;
+      background: #fafafa;
+    }
+
+    .day.selected {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+    }
+
+    .dayTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dayNum {
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .badge {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .dayHint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #2563eb;
+      font-weight: 700;
+    }
+
+    /* =======================================================
+       FINANCE STYLES
+       ======================================================= */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat {
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .statLabel {
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .statValue {
+      margin-top: 6px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .financeItem {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #f1f5f9;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .financeTitle {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .financeRight {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .amount {
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .dashboardLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+.dashboardLayout.filterClosed {
+  grid-template-columns: 60px 1fr 340px;
+}
+
+@media (max-width: 1200px) {
+  .dashboardLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filterSidebar {
+  padding: 0;
+  overflow: hidden;
+}
+
+.filterSidebar.collapsed {
+  width: 60px;
+}
+
+.filterSidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.filterSidebar.collapsed .filterSidebarHeader {
+  padding: 10px;
+  justify-content: center;
+  border-bottom: none;
+}
+
+.filterSidebarBody {
+  padding: 14px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.collapseBtn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  color: #374151;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filterSidebar.collapsed .collapseBtn {
+  width: 40px;
+  height: 40px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+.filterGroup {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.filterGroup:last-child {
+  border-bottom: none;
+}
+
+.filterGroupTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.filterTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.sidebarCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sidebarActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.mainContent,
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #dbe3ea;
+  border-radius: 12px;
+  background: #fff;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.bigCount {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #f8fafc;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.count {
+  font-size: 52px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.countLabel {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.caseMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.secondaryBtn {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+
+  /* =======================================================
+   SEARCHABLE DROPDOWN STYLES
+   ======================================================= */
+.searchable-dropdown {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.searchable-dropdown input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #dbe3ea;
+  border-radius: 12px;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+  color: #111827;
+  transition: all 0.2s ease;
+}
+
+.searchable-dropdown input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* Dropdown box */
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 2000;
+  padding: 6px;
+  animation: dropdownFade 0.15s ease-in-out;
+}
+
+/* Each item */
+.dropdown-item {
+  padding: 11px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111827;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dropdown-item:active {
+  transform: scale(0.99);
+}
+
+/* No data item */
+.dropdown-item.no-data {
+  color: #6b7280;
+  cursor: default;
+  text-align: center;
+  background: #f9fafb;
+}
+
+.dropdown-item.no-data:hover {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+/* Nice scrollbar */
+.dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Label improvement */
+.searchable-dropdown label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* Animation */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+}
   </style>
-</div>
