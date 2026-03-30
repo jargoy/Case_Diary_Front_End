@@ -77,3 +77,33 @@ docker stop user-app
 docker rm user-app
 docker run -d --name user-app -p 80:4000 -e PORT=4000 <your-registry>/user-app:latest
 ```
+
+## 8. GitHub Actions CI/CD to EC2
+
+This repository now includes a GitHub Actions workflow at `.github/workflows/deploy-ec2.yml`.
+
+It will run on push to `main`, `master`, or `yograj`, and also supports manual dispatch.
+
+### Required repository secrets
+
+- `EC2_SSH_HOST` — your EC2 public IP or DNS name
+- `EC2_SSH_USER` — user name for SSH, e.g. `ec2-user` or `ubuntu`
+- `EC2_SSH_PRIVATE_KEY` — the SSH private key for connecting to the instance
+- `EC2_SSH_PORT` — optional, defaults to `22`
+- `EC2_TARGET_DIR` — optional, defaults to `/home/ec2-user/app`
+
+### What the workflow does
+
+1. checks out the repository
+2. installs dependencies with `npm ci`
+3. builds the Angular SSR app
+4. SSHs into your EC2 instance
+5. clones or updates the repo in the target directory
+6. builds the Docker image on EC2
+7. restarts the `user-app` container on port `80`
+
+### EC2 prerequisites
+
+- Docker must be installed on the EC2 instance
+- the GitHub repo must be reachable from the instance
+- the target directory must be writable by the SSH user

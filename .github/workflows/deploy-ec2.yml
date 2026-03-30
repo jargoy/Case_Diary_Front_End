@@ -1,0 +1,58 @@
+name: Deploy Angular SSR to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - yograj
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the Angular app
+        run: npm run build
+
+      - name: Deploy to EC2 over SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_SSH_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || '22' }}
+          script: |
+            set -e
+            TARGET_DIR="${{ secrets.EC2_TARGET_DIR || '/home/ec2-user/app' }}"
+            REPO_URL="https://github.com/jargoy/Case_Diary_Front_End.git"
+            BRANCH="${{ github.ref_name }}"
+
+            mkdir -p "$TARGET_DIR"
+
+            if [ -d "$TARGET_DIR/.git" ]; then
+              cd "$TARGET_DIR"
+              git fetch --all
+              git checkout "$BRANCH"
+              git pull origin "$BRANCH"
+            else
+              git clone --branch "$BRANCH" "$REPO_URL" "$TARGET_DIR"
+              cd "$TARGET_DIR"
+            fi
+
+            docker build -t user-app .
+            docker rm -f user-app || true
+            docker run -d --name user-app -p 80:4000 -e PORT=4000 user-app:latest
