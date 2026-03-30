@@ -58,6 +58,28 @@ interface FinanceEntry {
   note?: string;
 }
 
+interface AdvocateExpense {
+  advancePayment: number;
+  paymentDate: string;
+  amountDue: number;
+}
+
+interface OtherExpense {
+  expenditureAmount: number;
+  expenditureDate: string;
+  reasonOfExpenditure: string;
+}
+
+interface ExpensePayload {
+  caseFileId: number;
+  advocateId: number;
+  advocateFee: number;
+  advocateExpenseEnabled: boolean;
+  otherExpenseEnabled: boolean;
+  advocateExpenses: AdvocateExpense[];
+  otherExpenses: OtherExpense[];
+}
+
 /**********************************************************************
  *  COMPONENT
  *********************************************************************/
@@ -366,6 +388,13 @@ export class AppComponent implements OnInit {
     amount: 0,
     note: ''
   };
+
+  /******************************************************************
+   *  ADD EXPENSE MODAL STATE
+   ******************************************************************/
+  showExpenseModal = false;
+  activeExpenseCaseId: number | null = null;
+  expenseForm: ExpensePayload = this.emptyExpenseForm();
 
   /******************************************************************
    *  CALENDAR STATE
@@ -720,19 +749,72 @@ loadCaseTypes() {
   }
 
   /******************************************************************
-   *  ADD EXPENSES
+   *  ADD EXPENSES (MODAL)
    ******************************************************************/
   addExpenses(caseId: number) {
-    alert(`Add expenses for case ID: ${caseId}`);
-    // TODO: Implement add expenses functionality
+    this.activeExpenseCaseId = caseId;
+    this.expenseForm = this.emptyExpenseForm();
+    this.expenseForm.caseFileId = caseId;
+    // TODO: map case -> advocateId properly. Using caseId as default placeholder.
+    this.expenseForm.advocateId = caseId;
+    this.showExpenseModal = true;
   }
 
-  /******************************************************************
-   *  ADD ADVOCATE FEES
-   ******************************************************************/
   addAdvocateFees(caseId: number) {
-    alert(`Add advocate fees for case ID: ${caseId}`);
-    // TODO: Implement add advocate fees functionality
+    // Reuse same add-expenses modal as a shortcut.
+    this.addExpenses(caseId);
+  }
+
+  closeExpenseModal() {
+    this.showExpenseModal = false;
+    this.activeExpenseCaseId = null;
+  }
+
+  addAdvocateExpenseRow() {
+    this.expenseForm.advocateExpenses.push({
+      advancePayment: 0,
+      paymentDate: this.todayISO(),
+      amountDue: 0
+    });
+  }
+
+  removeAdvocateExpenseRow(index: number) {
+    this.expenseForm.advocateExpenses.splice(index, 1);
+  }
+
+  addOtherExpenseRow() {
+    this.expenseForm.otherExpenses.push({
+      expenditureAmount: 0,
+      expenditureDate: this.todayISO(),
+      reasonOfExpenditure: ''
+    });
+  }
+
+  removeOtherExpenseRow(index: number) {
+    this.expenseForm.otherExpenses.splice(index, 1);
+  }
+
+  saveExpenses() {
+    const url = 'http://localhost:8080/api/case_diary/v1/add_expenses/save_expenses';
+
+    // Basic validation
+    if (this.expenseForm.advocateExpenseEnabled) {
+      if (this.expenseForm.advocateFee <= 0) {
+        alert('Please enter advocate fee.');
+        return;
+      }
+    }
+
+    this.http.post(url, this.expenseForm).subscribe({
+      next: () => {
+        alert('Expenses saved successfully');
+        this.closeExpenseModal();
+      },
+      error: (err) => {
+        console.error('Save expenses error', err);
+        alert('Failed to save expenses. See console for details.');
+      }
+    });
   }
 
   /******************************************************************
@@ -830,6 +912,33 @@ loadCaseTypes() {
       fixedFor: '',
       status: 'OPEN',
       createdAt: this.todayISO()
+    };
+  }
+
+  /******************************************************************
+   *  EMPTY EXPENSE FORM
+   ******************************************************************/
+  private emptyExpenseForm(): ExpensePayload {
+    return {
+      caseFileId: 0,
+      advocateId: 0,
+      advocateFee: 0,
+      advocateExpenseEnabled: true,
+      otherExpenseEnabled: true,
+      advocateExpenses: [
+        {
+          advancePayment: 0,
+          paymentDate: this.todayISO(),
+          amountDue: 0
+        }
+      ],
+      otherExpenses: [
+        {
+          expenditureAmount: 0,
+          expenditureDate: this.todayISO(),
+          reasonOfExpenditure: ''
+        }
+      ]
     };
   }
 

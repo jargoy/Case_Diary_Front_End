@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:user": "node dist/user/server/server.mjs"
+    "serve:ssr:user": "node dist/user/server/server.mjs",
+    "start:ssr": "npm run serve:ssr:user"
   },
   "private": true,
   "packageManager": "npm@11.11.0",
